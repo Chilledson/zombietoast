@@ -17,7 +17,7 @@ export default class Player extends Vue {
   radius!: number;
 
   layerSize = { width: window.innerWidth, height: window.innerHeight };
-  size: number = 66;
+  size: number = 128;
   position: Coords = { x: 50, y: window.innerHeight - 50 };
   newCoords: Coords = { x: 50, y: window.innerHeight - 50 };
   velocity = { x: 0, y: 0 };
@@ -41,10 +41,9 @@ export default class Player extends Vue {
   speed: number = 10;
   sprite!: Sprite;
   jumping: boolean = false;
-
+  dir: string = 'right';
   update(dt: number, now: number) {
     let hasMoved = false;
-    let dir: string = 'right';
 
     if (
       this.pressedKeys.up && // Is jumping
@@ -61,13 +60,13 @@ export default class Player extends Vue {
     if (this.pressedKeys.left) {
       this.velocity.x -= this.baseVelocity;
       hasMoved = true;
-      dir = 'left';
+      this.dir = 'left';
     }
 
     if (this.pressedKeys.right) {
       this.velocity.x += this.baseVelocity;
       hasMoved = true;
-      dir = 'right';
+      this.dir = 'right';
     }
 
     this.newCoords.x += this.velocity.x;
@@ -83,8 +82,8 @@ export default class Player extends Vue {
     }
 
     // Off the left of the screen
-    if (this.position.x - this.size < 0) {
-      this.newCoords.x = this.size;
+    if (this.position.x < 0) {
+      this.newCoords.x = 0;
       this.velocity.x = 0;
     }
 
@@ -108,20 +107,20 @@ export default class Player extends Vue {
       // Is idle
       this.sprite.frames = IDLE_FRAMES;
     }
-    
-    this.sprite.update(this.provider.context, dt, this.position);
 
-    // Update timestamp
-    this.now = now;
+    // Set the row of the animation - one row per player direction
+    this.sprite.currentRow = this.dir === 'right' ? 1 : 0;
+    
+    this.sprite.update(dt);
+
+    // Not sure if I like forcing the render function like this
+    this.$forceUpdate();
   }
 
   render() {
-    if (!this.provider.context) {
-      return;
+    if (this.provider.context) {
+      this.draw(this.provider.context);
     }
-
-    this.draw(this.provider.context);
-    this.$emit("afterrender", this.now);
   }
 
   draw(ctx: any) {
@@ -129,19 +128,20 @@ export default class Player extends Vue {
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
-    // ctx.beginPath();
-    // ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
-    // ctx.fillStyle = "blue";
-    // ctx.fill();
-    // ctx.stroke();
-    // ctx.closePath();
+    this.sprite.draw(this.provider.context, this.position);
   }
 
-  mounted() {
+  created() {
     window.addEventListener("keydown", this.onMove);
     window.addEventListener("keyup", this.onMoveStop);
 
-    this.sprite = new Sprite("ZombieToast.png");
+    this.sprite = new Sprite(
+      "sprites/player/ZombieToast-combined-128.png",
+      IDLE_FRAMES,
+      0,
+      6,
+      [128, 128]
+    );
   }
 
   onMove(event: KeyboardEvent) {

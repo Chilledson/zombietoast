@@ -1,35 +1,25 @@
 <template>
   <div id="viewport">
     <layer class="background" :dimensions="layerSize">
-      <Background ref="background" @afterrender="afterRender" :speed="speed" />
+      <Background ref="background" :speed="speed" />
     </layer>
     <layer class="foreground" :dimensions="layerSize">
       <Player ref="player" />
-
-      <!-- <Sprite ref="sprite" /> -->
     </layer>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  Component,
-  Vue,
-  Provide,
-  ProvideReactive
-} from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import Layer from "./components/Layer.vue";
 import Player from "./components/Player.vue";
 import Background from "./components/Background.vue";
-import Sprite from "./components/Sprite.vue";
-import { Coords } from "./models/coordinates";
 
 @Component({
   components: {
     Layer,
     Player,
-    Background,
-    Sprite
+    Background
   }
 })
 export default class App extends Vue {
@@ -45,25 +35,26 @@ export default class App extends Vue {
     window.requestAnimationFrame(this.loop);
   }
 
+  update(step: number) {
+    Object.values(this.$refs).forEach((ref: any) => {
+      if (typeof ref.update === "function") {
+        ref.update(this.step, this.now);
+      }
+    });
+  }
+  
   loop() {
     this.now = performance.now();
     this.dt = this.dt + Math.min(1, (this.now - this.last) / 1000);
 
     while (this.dt > this.step) {
       this.dt = this.dt - this.step;
-      Object.values(this.$refs).forEach((ref: any) => {
-        if (typeof ref.update === "function") {
-          ref.update(this.step, this.now);
-        }
-      });
+      this.update(this.step);
     }
-    window.requestAnimationFrame(this.loop);
-  }
 
-  afterRender(now: number) {
-    if (now) {
-      this.last = now;
-    }
+    this.last = this.now;
+
+    window.requestAnimationFrame(this.loop);
   }
 }
 </script>

@@ -64,18 +64,12 @@ export default class Background extends Vue {
     if (this.scrollVal >= 1280 * this.scale) {
       this.scrollVal = 0;
     }
-
-    this.now = now;
   }
 
   render() {
-    if (!this.provider.context) {
-      return;
+    if (this.provider.context) {
+      this.draw(this.provider.context);
     }
-
-    this.draw(this.provider.context);
-    // after render
-    this.$emit("afterrender", this.now);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -86,7 +80,7 @@ export default class Background extends Vue {
     this.backgroundLayers.forEach(({ image, offset }) => {
       if (image) {
         const scale = Math.max(width / image.width, height / image.height);
-        // get the top left position of the image
+        // Get the top left position of the image
         const x = width / 2 - (image.width / 2) * scale;
         const y = height / 2 - (image.height / 2) * scale;
 
