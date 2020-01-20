@@ -23,8 +23,8 @@ export default class Player extends Vue {
   velocity = { x: 0, y: 0 };
   moving: boolean = false;
   distance: number = 5;
-  friction: number = 0.89; // friction
-  baseVelocity: number = 0.95;
+  friction: number = 0.79; // friction
+  baseVelocity: number = 0.99;
   pressedKeys: { [key: string]: boolean } = {
     left: false,
     right: false,
@@ -38,10 +38,13 @@ export default class Player extends Vue {
     83: "down"
   };
   now!: number;
-  speed: number = 50;
+  speed: number = 10;
   sprite!: Sprite;
+  jumping: boolean = false;
 
   update(dt: number, now: number) {
+    let hasMoved = false;
+    let dir: string = 'right';
 
     if (
       this.pressedKeys.up && // Is jumping
@@ -49,14 +52,22 @@ export default class Player extends Vue {
       this.position.y + this.size >= this.layerSize.height // Is on the bottom of the screen
     ) {
       this.velocity.y -= 15;
+      this.jumping = true;
+      hasMoved = true;
+    } else {
+      this.jumping = false;
     }
 
     if (this.pressedKeys.left) {
       this.velocity.x -= this.baseVelocity;
+      hasMoved = true;
+      dir = 'left';
     }
 
     if (this.pressedKeys.right) {
       this.velocity.x += this.baseVelocity;
+      hasMoved = true;
+      dir = 'right';
     }
 
     this.newCoords.x += this.velocity.x;
@@ -89,19 +100,15 @@ export default class Player extends Vue {
       this.velocity.y = 0;
     }
 
-    let hasMoved =
-      this.position.x !== this.newCoords.x ||
-      this.position.y !== this.newCoords.y;
-
     this.position = this.newCoords;
 
-    if (hasMoved) {
+    if (hasMoved) {      
       this.sprite.frames = MOVING_FRAMES;
     } else {
       // Is idle
       this.sprite.frames = IDLE_FRAMES;
     }
-
+    
     this.sprite.update(this.provider.context, dt, this.position);
 
     // Update timestamp

@@ -2,27 +2,48 @@ import { Coords } from "@/models/coordinates";
 import { getImage } from "./image";
 
 export class Sprite {
+  // scale the sprite image
+  scale: number = 1;
+
   // the x and y coordinate in the image for this sprite
   position: Array<number> = [0, 0];
+
   // size of the sprite (just one keyframe)
   size: Array<number> = [64, 64];
+
+  // the number of rows
+  rows: number = 2;
+
+  // sprite height
+  imgHeight: number = 128;
+
   // speed in frames/sec for animating
   speed: number = 4;
-  // an array of frame indexes for animating: [0, 1, 2, 1]
-  _frames: Array<number> = [2, 3, 4, 5];
 
-  get frames() {
+  // the row to use
+  private _currentRow: number = 1;
+
+  public get currentRow() {
+    return this._currentRow;
+  }
+  public set currentRow(row) {
+    this._currentRow = row;
+  }
+
+  // an array of frame indexes for animating: [0, 1, 2, 1]
+  private _frames: Array<number> = [2, 3, 4, 5];
+
+  public get frames() {
     return this._frames;
   }
 
-  set frames(frames) {
+  public set frames(frames) {
     this._frames = frames;
   }
 
   // Position in the frame
   index: number = 0;
-  // which direction to move in the sprite map when animating: 'horizontal' (default) or 'vertical'
-  dir: string = "horizontal";
+
   // true to only run the animation once, defaults to false
   once: boolean = false;
 
@@ -66,13 +87,8 @@ export class Sprite {
     let [x, y] = this.position;
     let [w, h] = this.size;
 
-    if (this.dir == "vertical") {
-      y += frame * h;
-    } else {
-      x += frame * w;
-    }
-
-    // console.log(x, y)
+    y += this.imgHeight - (this.imgHeight / this.currentRow);
+    x += frame * w;
 
     if (this.image) {
       ctx.drawImage(this.image, x, y, w, h, coords.x, coords.y, w, h);
