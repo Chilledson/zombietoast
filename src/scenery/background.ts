@@ -61,47 +61,40 @@ export class Background {
 
     this.scrollVal -= distance;
 
-
     let hRatio = ctx.canvas.width / this.image.width;
     let vRatio = ctx.canvas.height / this.image.height;
     let ratio = Math.min(hRatio, vRatio);
+    let normalisedScrollValue = this.scrollVal * ratio;
 
-    let normalisedScrollValue = Math.abs(this.scrollVal * ratio)
-
-    if (normalisedScrollValue >= ctx.canvas.width || normalisedScrollValue <= 0) {
+    if (
+      Math.abs(normalisedScrollValue) >= this.image.width ||
+      Math.abs(normalisedScrollValue) <= 0
+    ) {
       this.scrollVal = 0;
     }
 
     this.prevX = this.currentX;
 
-    let sx = this.image.width + this.scrollVal;
-    let sy = ctx.canvas.height - (this.image.height - yView) * ratio;
 
-    let dWidth = this.image.width * ratio;
-    let dHeight = this.image.height * ratio;
+    let sWidth = this.image.width * ratio;
+    let sHeight = this.image.height * ratio;
 
-    console.log(sy)
+    let dWidth = sWidth;
+    let dHeight = sHeight;
+
+    let sx = this.image.width + normalisedScrollValue;
+    let sy = ctx.canvas.height - this.image.height; // Anchor to bottom of canvas
 
     // Central image
-    ctx.drawImage(
-      this.image,
-      -sx,
-      sy,
-      this.image.width,
-      this.image.height,
-      0,
-      sy,
-      dWidth,
-      dHeight
-    );
+    ctx.drawImage(this.image, -sx, 0, sWidth, sHeight, 0, sy, dWidth, dHeight);
 
     // Image to the right of the screen
     ctx.drawImage(
       this.image,
-      -this.scrollVal,
-      sy,
-      this.image.width,
-      this.image.height,
+      -normalisedScrollValue,
+      0,
+      sWidth,
+      sHeight,
       0,
       sy,
       dWidth,
@@ -111,17 +104,15 @@ export class Background {
     // Image to the left of the screen
     ctx.drawImage(
       this.image,
-      this.image.width - this.scrollVal,
-      sy,
-      this.image.width,
-      this.image.height,
+      sWidth - normalisedScrollValue,
+      0,
+      sWidth,
+      sHeight,
       0,
       sy,
       dWidth,
       dHeight
     );
 
-    ctx.strokeRect(sx, sy, dWidth, dHeight);
-    ctx.strokeRect(this.scrollVal, sy, dWidth, dHeight);
   }
 }

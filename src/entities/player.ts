@@ -16,10 +16,9 @@ const PROJECTILE_FRAMES = [0, 1, 2];
 const PROJECTILE_DEAD = [3, 4, 5, 6];
 
 export default class Player {
-  layerSize = { width: window.innerWidth, height: window.innerHeight };
   size: number = 128;
-  position: Coords = { x: 50, y: window.innerHeight - 50 };
-  newCoords: Coords = { x: 50, y: window.innerHeight - 50 };
+  position: Coords = { x: 50, y: this.layerSize.height - 50 };
+  newCoords: Coords = { x: 50, y: this.layerSize.height - 50 };
   velocity = { x: 0, y: 0 };
   moving: boolean = false;
   distance: number = 5;
@@ -48,8 +47,13 @@ export default class Player {
   lastFire!: number;
   projectiles: Array<Projectile> = [];
   projectileImg: HTMLImageElement;
+  attackCooldown: number = 700;
 
-  constructor(private worldWidth: number, private worldHeight: number) {
+  constructor(
+    private worldWidth: number,
+    private worldHeight: number,
+    public layerSize: any
+  ) {
     window.addEventListener("keydown", this.onMove.bind(this));
     window.addEventListener("keyup", this.onMoveStop.bind(this));
 
@@ -120,6 +124,7 @@ export default class Player {
       this.newCoords.y = this.layerSize.height - this.size;
       this.velocity.y = 0;
     }
+
     if (hasMoved) {
       this.sprite.frames = MOVING_FRAMES;
     } else if (this.isDead) {
@@ -131,35 +136,14 @@ export default class Player {
       this.sprite.frames = IDLE_FRAMES;
     }
 
-    if (
-      this.isShooting &&
-      (performance.now() - this.lastFire > 700 || !this.lastFire)
-    ) {
+    if (this.isShooting) {
       const mid = this.midPoint();
 
-      this.projectiles.push(
-        new Projectile(
-          14,
-          14,
-          mid.x,
-          mid.y,
-          this.dir,
-          250, // Movement delay
-          700, // Range (in px)
-          700, // Speed
-          [68, 32],
-          new Sprite(
-            this.projectileImg,
-            PROJECTILE_FRAMES,
-            this.dir === Direction.RIGHT ? 0 : 1,
-            7,
-            [92, 64],
-            true
-          )
-        )
-      );
-      // Update last fire time
-      this.lastFire = performance.now();
+      this.rangedAttack({
+        startX: mid.x,
+        startY: mid.y
+        dir: this.dir
+      });
     }
 
     // Set the row of the animation - one row per player direction
@@ -210,5 +194,44 @@ export default class Player {
       x: this.position.x + this.size / 2,
       y: this.position.y + this.size / 2,
     };
+  }
+
+  rangedAttack({
+    startX,
+    startY,
+    dir,
+  }: {
+    startX: number;
+    startY: number;
+    dir: Direction;
+  }) {
+    if (
+      performance.now() - this.lastFire > this.attackCooldown ||
+      !this.lastFire
+    ) {
+      this.projectiles.push(
+        new Projectile(
+          14,
+          14,
+          startX,
+          startY,
+          dir,
+          250, // Movement delay
+          700, // Range (in px)
+          700, // Speed
+          [68, 32],
+          new Sprite(
+            this.projectileImg,
+            PROJECTILE_FRAMES,
+            dir === Direction.RIGHT ? 0 : 1,
+            7,
+            [92, 64],
+            true
+          )
+        )
+      );
+      // Update last fire time
+      this.lastFire = performance.now();
+    }
   }
 }

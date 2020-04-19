@@ -11,9 +11,9 @@ export default class App {
   now: number = 0;
   last: number = performance.now();
   speed = 50;
-  layerSize = { width: window.innerWidth, height: window.innerHeight };
+  layerSize: any = {};
   ctx: CanvasRenderingContext2D;
-  world = { width: 6000, height: this.layerSize.width };
+  world: any = {};
 
   player: Player;
   enemyManager: EnemyManager;
@@ -26,22 +26,66 @@ export default class App {
 
     this.logger = new Logger();
 
-    canvas.width = this.layerSize.width;
-    canvas.height = this.layerSize.height;
-
     this.ctx = canvas.getContext("2d");
 
-    this.player = new Player(this.world.width, this.world.height);
-    this.enemyManager = new EnemyManager([], { max: 2, spawnInterval: 1000 }, this.layerSize);
-    this.background = new Background(canvas.width, canvas.height);
+    const scale = this.resize();
+
+    console.log(scale);
+
+    this.layerSize = {
+      width: this.canvas.width,
+      height: this.canvas.height,
+    };
+
+    this.world = {
+      width: 6000,
+      height: this.layerSize.width,
+    };
+
+    this.player = new Player(
+      this.world.width,
+      this.world.height,
+      this.layerSize
+    );
+
+    this.enemyManager = new EnemyManager(
+      [],
+      { max: 2, spawnInterval: 1000 },
+      this.layerSize
+    );
+
+    this.background = new Background(this.canvas.width, this.canvas.height);
 
     // Set the right viewport size for the camera
-    const vWidth = Math.min(this.world.width, canvas.width);
-    const vHeight = Math.min(this.world.height, canvas.height);
+    const vWidth = Math.min(this.world.width, this.canvas.width);
+    const vHeight = Math.min(this.world.height, this.canvas.height);
 
-    this.camera = new Camera(0, 0, vWidth, vHeight, this.world.width, this.world.height);
+    this.camera = new Camera(
+      0,
+      0,
+      vWidth,
+      vHeight,
+      this.world.width,
+      this.world.height
+    );
 
     this.camera.follow(this.player, vWidth / 2, vHeight / 2);
+  }
+
+  resize() {
+    const baseW = 1280;
+    const baseH = 720;
+    const deviceWidth = baseW; // window.innerWidth;
+    const deviceHeight = baseH; // window.innerHeight;
+
+    const scaleFitNative = Math.min(deviceWidth / baseW, deviceHeight / baseH);
+
+    this.canvas.style.width = `${deviceWidth}px`;
+    this.canvas.style.height = `${deviceHeight}px`;
+    this.canvas.width = deviceWidth;
+    this.canvas.height = deviceHeight;
+
+    return scaleFitNative;
   }
 
   loop() {
@@ -72,8 +116,6 @@ export default class App {
 
   render(step: number) {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-
-    this.ctx.imageSmoothingEnabled = true;
 
     const { xView, yView } = this.camera;
 
