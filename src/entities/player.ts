@@ -141,7 +141,7 @@ export default class Player {
 
       this.rangedAttack({
         startX: mid.x,
-        startY: mid.y
+        startY: mid.y,
         dir: this.dir
       });
     }
